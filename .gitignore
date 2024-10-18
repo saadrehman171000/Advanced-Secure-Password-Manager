@@ -9,10 +9,6 @@
 # testing
 /coverage
 
-# Ignore npm cache files
-%APPDATA%/npm-cache/
-
-
 # next.js
 /.next/
 /out/

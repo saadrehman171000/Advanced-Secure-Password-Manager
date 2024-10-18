@@ -1,8 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Trash2, Edit, Eye, EyeOff, Plus, Loader2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Trash2, Edit, Eye, EyeOff, Plus, Loader2, RefreshCw, Lock, Search, Shield } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Label } from '@/components/ui/label'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useToast } from "@/components/ui/use-toast"
 
 interface Password {
   id: number
@@ -18,7 +24,9 @@ export default function PasswordManager() {
   const [showPassword, setShowPassword] = useState<{ [key: number]: boolean }>({})
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-
+  const [searchTerm, setSearchTerm] = useState('')
+  const [showWelcome, setShowWelcome] = useState(true)
+  const { toast } = useToast()
 
   useEffect(() => {
     fetchPasswords()
@@ -35,7 +43,11 @@ export default function PasswordManager() {
       setPasswords(data)
     } catch (error) {
       console.error('Error fetching passwords:', error)
-      // You might want to set an error state here and display it to the user
+      toast({
+        title: "Error",
+        description: "Failed to fetch passwords. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }
@@ -62,13 +74,21 @@ export default function PasswordManager() {
       if (!response.ok) {
         throw new Error('Failed to save password')
       }
-      await fetchPasswords() // Refresh the password list
+      await fetchPasswords()
       setNewPassword({ website: '', username: '', password: '' })
       setEditingId(null)
       setIsModalOpen(false)
+      toast({
+        title: "Success",
+        description: editingId !== null ? "Password updated successfully" : "Password added successfully",
+      })
     } catch (error) {
       console.error('Error saving password:', error)
-      // You might want to set an error state here and display it to the user
+      toast({
+        title: "Error",
+        description: "Failed to save password. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }
@@ -92,10 +112,18 @@ export default function PasswordManager() {
       if (!response.ok) {
         throw new Error('Failed to delete password')
       }
-      await fetchPasswords() // Refresh the password list
+      await fetchPasswords()
+      toast({
+        title: "Success",
+        description: "Password deleted successfully",
+      })
     } catch (error) {
       console.error('Error deleting password:', error)
-      // You might want to set an error state here and display it to the user
+      toast({
+        title: "Error",
+        description: "Failed to delete password. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }
@@ -105,146 +133,245 @@ export default function PasswordManager() {
     setShowPassword(prev => ({ ...prev, [id]: !prev[id] }))
   }
 
+  const generateRandomPassword = () => {
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+{}[]|:;<>,.?~"
+    let password = ""
+    for (let i = 0; i < 16; i++) {
+      password += charset.charAt(Math.floor(Math.random() * charset.length))
+    }
+    setNewPassword(prev => ({ ...prev, password }))
+  }
+
+  const filteredPasswords = passwords.filter(pw =>
+    pw.website.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    pw.username.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  if (showWelcome) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 text-white"
+      >
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 260, damping: 20 }}
+        >
+          <Shield className="w-32 h-32 mb-8" />
+        </motion.div>
+        <motion.h1
+          initial={{ y: -50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="text-5xl font-bold mb-4"
+        >
+          Welcome to SecureVault
+        </motion.h1>
+        <motion.p
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="text-xl mb-8 text-center max-w-md"
+        >
+          Your trusted password manager. Keep your digital life secure and organized.
+        </motion.p>
+        <motion.div
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          <Button
+            size="lg"
+            onClick={() => setShowWelcome(false)}
+            className="bg-white text-blue-600 hover:bg-blue-100 transition-colors duration-300 text-lg px-8 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+          >
+            Get Started
+          </Button>
+        </motion.div>
+      </motion.div>
+    )
+  }
+
   return (
-    <div>
-      {isLoading ? (
-        <div className='flex justify-center items-start h-64'>
-          <Loader2 className='animate-spin w-8 h-8' />
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="container mx-auto p-8 max-w-5xl"
+    >
+      <motion.h1
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="text-4xl font-bold mb-8 text-center text-gray-800"
+      >
+        SecureVault
+      </motion.h1>
+      
+      <motion.div
+        initial={{ y: 50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="mb-8 flex justify-between items-center"
+      >
+        <div className="relative">
+          <Input
+            type="text"
+            placeholder="Search passwords..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 pr-4 py-2 w-64 shadow-md transition-shadow duration-300 hover:shadow-lg rounded-full"
+          />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
         </div>
-      ) : (
-        <div className="mx-auto p-4 max-w-4xl">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold">Password Manager</h1>
-            <button
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogTrigger asChild>
+            <Button
               onClick={() => {
                 setNewPassword({ website: '', username: '', password: '' })
                 setEditingId(null)
-                setIsModalOpen(true)
               }}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300 flex items-center"
+              className="bg-blue-500 hover:bg-blue-600 text-white transition-colors duration-300 rounded-full px-6 py-2 flex items-center"
             >
               <Plus className="w-5 h-5 mr-2" />
               Add Password
-            </button>
-          </div>
-
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Website</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Password</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {passwords.map(pw => (
-                  <tr key={pw.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">{pw.website}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{pw.username}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <span className={showPassword[pw.id] ? '' : 'filter blur-sm'}>
-                          {pw.password}
-                        </span>
-                        <button
-                          onClick={() => togglePasswordVisibility(pw.id)}
-                          className="ml-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:text-gray-500 transition duration-150 ease-in-out"
-                          aria-label={showPassword[pw.id] ? "Hide password" : "Show password"}
-                        >
-                          {showPassword[pw.id] ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleEdit(pw.id)}
-                        className="text-indigo-600 hover:text-indigo-900 mr-2 focus:outline-none focus:text-indigo-900 transition duration-150 ease-in-out"
-                        aria-label="Edit password"
-                      >
-                        <Edit className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(pw.id)}
-                        className="text-red-600 hover:text-red-900 focus:outline-none focus:text-red-900 transition duration-150 ease-in-out"
-                        aria-label="Delete password"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {isModalOpen && (
-            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="my-modal">
-              <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                <div className="mt-3 text-center">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">
-                    {editingId !== null ? 'Edit Password' : 'Add New Password'}
-                  </h3>
-                  <form onSubmit={handleSubmit} className="mt-2 text-left">
-                    <div className="mb-4">
-                      <label htmlFor="website" className="block text-sm font-medium text-gray-700">Website</label>
-                      <Input
-                        type="text"
-                        id="website"
-                        name="website"
-                        value={newPassword.website}
-                        onChange={handleInputChange}
-                        required
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                      />
-                    </div>
-                    <div className="mb-4">
-                      <label htmlFor="username" className="block text-sm font-medium text-gray-700">Username</label>
-                      <Input
-                        type="text"
-                        id="username"
-                        name="username"
-                        value={newPassword.username}
-                        onChange={handleInputChange}
-                        required
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                      />
-                    </div>
-                    <div className="mb-4">
-                      <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-                      <Input
-                        type="password"
-                        id="password"
-                        name="password"
-                        value={newPassword.password}
-                        onChange={handleInputChange}
-                        required
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                      />
-                    </div>
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => setIsModalOpen(false)}
-                        className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2 focus:outline-none focus:shadow-outline transition duration-300"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300"
-                      >
-                        {editingId !== null ? 'Update' : 'Add'}
-                      </button>
-                    </div>
-                  </form>
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>{editingId !== null ? 'Edit Password' : 'Add New Password'}</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="website">Website</Label>
+                <Input
+                  id="website"
+                  name="website"
+                  value={newPassword.website}
+                  onChange={handleInputChange}
+                  required
+                  className="shadow-sm rounded-md"
+                />
+              </div>
+              <div>
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  name="username"
+                  value={newPassword.username}
+                  onChange={handleInputChange}
+                  required
+                  className="shadow-sm rounded-md"
+                />
+              </div>
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <div  className="flex">
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    value={newPassword.password}
+                    onChange={handleInputChange}
+                    required
+                    className="flex-grow shadow-sm rounded-l-md"
+                  />
+                  <Button
+                    type="button"
+                    onClick={generateRandomPassword}
+                    className="bg-green-500 hover:bg-green-600 text-white transition-colors duration-300 rounded-r-md"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Generate
+                  </Button>
                 </div>
               </div>
-            </div>
-          )}
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white transition-colors duration-300">
+                  {editingId !== null ? 'Update' : 'Add'}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </motion.div>
+
+      {isLoading ? (
+        <div className='flex justify-center items-center h-64'>
+          <Loader2 className='animate-spin w-12 h-12 text-blue-500' />
         </div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white rounded-lg shadow-lg overflow-hidden"
+        >
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="font-semibold text-gray-700">Website</TableHead>
+                <TableHead className="font-semibold text-gray-700">Username</TableHead>
+                <TableHead className="font-semibold text-gray-700">Password</TableHead>
+                <TableHead className="font-semibold text-gray-700">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <AnimatePresence>
+                {filteredPasswords.map(pw => (
+                  <motion.tr
+                    key={pw.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <TableCell>{pw.website}</TableCell>
+                    <TableCell>{pw.username}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <span className={`transition-all duration-300 ${showPassword[pw.id] ? '' : 'filter blur-sm'}`}>
+                          {pw.password}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => togglePasswordVisibility(pw.id)}
+                          className="ml-2 text-gray-500 hover:text-gray-700 transition-colors duration-300"
+                        >
+                          {showPassword[pw.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </Button>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(pw.id)}
+                        className="text-blue-500 hover:text-blue-700 transition-colors duration-300"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(pw.id)}
+                        className="text-red-500 hover:text-red-700 transition-colors duration-300"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </motion.tr>
+                ))}
+              </AnimatePresence>
+            </TableBody>
+          </Table>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   )
 }

@@ -1,0 +1,14 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@10.8.1
+2 info using node@v22.3.0
+3 silly config load:file:C:\Program Files\nodejs\node_modules\npm\npmrc
+4 silly config load:file:E:\password-manager-clerk\.npmrc
+5 silly config load:file:C:\Users\saadr\.npmrc
+6 silly config load:file:C:\Users\saadr\AppData\Roaming\npm\etc\npmrc
+7 verbose title npm exec shadcn@latest add https://v0.dev/chat/b/b_6VMl81846v1?token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..5x10LsqU7vLJmzt1.V8gVI-VcIhdMZZU4P6lXTd9w3jnA3kZgM2Xk-W8dSSTDc4vu48Hx3JSVvKU.1LsZPYfuhtQhPXJWkZUSWA
+8 verbose argv "exec" "--" "shadcn@latest" "add" "https://v0.dev/chat/b/b_6VMl81846v1?token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..5x10LsqU7vLJmzt1.V8gVI-VcIhdMZZU4P6lXTd9w3jnA3kZgM2Xk-W8dSSTDc4vu48Hx3JSVvKU.1LsZPYfuhtQhPXJWkZUSWA"
+9 verbose logfile logs-max:10 dir:E:\password-manager-clerk\%APPDATA%\npm-cache\_logs\2024-10-18T11_52_02_151Z-
+10 verbose logfile E:\password-manager-clerk\%APPDATA%\npm-cache\_logs\2024-10-18T11_52_02_151Z-debug-0.log
+11 silly logfile start cleaning logs, removing 1 files
+12 silly logfile done cleaning log files
+13 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
