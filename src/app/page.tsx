@@ -17,7 +17,7 @@ interface Password {
   password: string
 }
 
-export default function PasswordManager() {
+export default function Home() {
   const [passwords, setPasswords] = useState<Password[]>([])
   const [newPassword, setNewPassword] = useState({ website: '', username: '', password: '' })
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -267,7 +267,7 @@ export default function PasswordManager() {
               </div>
               <div>
                 <Label htmlFor="password">Password</Label>
-                <div  className="flex">
+                <div className="flex">
                   <Input
                     id="password"
                     name="password"
