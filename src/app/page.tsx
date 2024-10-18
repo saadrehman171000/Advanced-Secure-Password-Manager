@@ -1,151 +1,155 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { Trash2, Edit, Eye, EyeOff, Plus, Loader2, RefreshCw, Lock, Search, Shield } from 'lucide-react'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Label } from '@/components/ui/label'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useToast } from "@/components/ui/use-toast"
+import { useState, useEffect, useCallback } from 'react';
+import { Trash2, Edit, Eye, EyeOff, Plus, Loader2, RefreshCw, Search, Shield } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Label } from '@/components/ui/label';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useToast } from "@/components/ui/use-toast";
 
 interface Password {
-  id: number
-  website: string
-  username: string
-  password: string
+  id: number;
+  website: string;
+  username: string;
+  password: string;
 }
 
 export default function Home() {
-  const [passwords, setPasswords] = useState<Password[]>([])
-  const [newPassword, setNewPassword] = useState({ website: '', username: '', password: '' })
-  const [editingId, setEditingId] = useState<number | null>(null)
-  const [showPassword, setShowPassword] = useState<{ [key: number]: boolean }>({})
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [showWelcome, setShowWelcome] = useState(true)
-  const { toast } = useToast()
+  const [passwords, setPasswords] = useState<Password[]>([]);
+  const [newPassword, setNewPassword] = useState({ website: '', username: '', password: '' });
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [showPassword, setShowPassword] = useState<{ [key: number]: boolean }>({});
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showWelcome, setShowWelcome] = useState(true);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    fetchPasswords()
-  }, [])
-
-  const fetchPasswords = async () => {
-    setIsLoading(true)
+  const fetchPasswords = useCallback(async () => {
+    setIsLoading(true);
     try {
-      const response = await fetch('/api/password')
+      const response = await fetch('/api/password');
       if (!response.ok) {
-        throw new Error('Failed to fetch passwords')
+        throw new Error('Failed to fetch passwords');
       }
-      const data = await response.json()
-      setPasswords(data)
+      const data = await response.json();
+      setPasswords(data);
     } catch (error) {
-      console.error('Error fetching passwords:', error)
+      console.error('Error fetching passwords:', error);
       toast({
         title: "Error",
         description: "Failed to fetch passwords. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchPasswords();
+  }, [fetchPasswords]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setNewPassword(prev => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = e.target;
+    setNewPassword(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
     try {
-      const url = editingId !== null ? `/api/password?id=${editingId}` : '/api/password'
-      const method = editingId !== null ? 'PUT' : 'POST'
+      const url = editingId !== null ? `/api/password?id=${editingId}` : '/api/password';
+      const method = editingId !== null ? 'PUT' : 'POST';
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(newPassword),
-      })
+      });
       if (!response.ok) {
-        throw new Error('Failed to save password')
+        throw new Error('Failed to save password');
       }
-      await fetchPasswords()
-      setNewPassword({ website: '', username: '', password: '' })
-      setEditingId(null)
-      setIsModalOpen(false)
+      await fetchPasswords();
+      setNewPassword({ website: '', username: '', password: '' });
+      setEditingId(null);
+      setIsModalOpen(false);
       toast({
         title: "Success",
         description: editingId !== null ? "Password updated successfully" : "Password added successfully",
-      })
+        variant: "default", // Changed from "success" to "default"
+      });
     } catch (error) {
-      console.error('Error saving password:', error)
+      console.error('Error saving password:', error);
       toast({
         title: "Error",
         description: "Failed to save password. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleEdit = (id: number) => {
-    const passwordToEdit = passwords.find(p => p.id === id)
+    const passwordToEdit = passwords.find(p => p.id === id);
     if (passwordToEdit) {
-      setNewPassword(passwordToEdit)
-      setEditingId(id)
-      setIsModalOpen(true)
+      setNewPassword(passwordToEdit);
+      setEditingId(id);
+      setIsModalOpen(true);
     }
-  }
+  };
 
   const handleDelete = async (id: number) => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       const response = await fetch(`/api/password?id=${id}`, {
         method: 'DELETE',
-      })
+      });
       if (!response.ok) {
-        throw new Error('Failed to delete password')
+        throw new Error('Failed to delete password');
       }
-      await fetchPasswords()
+      await fetchPasswords();
       toast({
         title: "Success",
         description: "Password deleted successfully",
-      })
+        variant: "default", // Changed from "success" to "default"
+      });
     } catch (error) {
-      console.error('Error deleting password:', error)
+      console.error('Error deleting password:', error);
       toast({
         title: "Error",
         description: "Failed to delete password. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const togglePasswordVisibility = (id: number) => {
-    setShowPassword(prev => ({ ...prev, [id]: !prev[id] }))
-  }
+    setShowPassword(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const generateRandomPassword = () => {
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+{}[]|:;<>,.?~"
-    let password = ""
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+{}[]|:;<>,.?~";
+    let password = "";
     for (let i = 0; i < 16; i++) {
-      password += charset.charAt(Math.floor(Math.random() * charset.length))
+      const randomIndex = Math.floor(Math.random() * charset.length);
+      password += charset.charAt(randomIndex);
     }
-    setNewPassword(prev => ({ ...prev, password }))
-  }
+    setNewPassword(prev => ({ ...prev, password }));
+  };
+  
 
   const filteredPasswords = passwords.filter(pw =>
     pw.website.toLowerCase().includes(searchTerm.toLowerCase()) ||
     pw.username.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  );
 
   if (showWelcome) {
     return (
@@ -192,7 +196,7 @@ export default function Home() {
           </Button>
         </motion.div>
       </motion.div>
-    )
+    );
   }
 
   return (
@@ -209,7 +213,7 @@ export default function Home() {
       >
         SecureVault
       </motion.h1>
-      
+
       <motion.div
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -229,8 +233,8 @@ export default function Home() {
           <DialogTrigger asChild>
             <Button
               onClick={() => {
-                setNewPassword({ website: '', username: '', password: '' })
-                setEditingId(null)
+                setNewPassword({ website: '', username: '', password: '' });
+                setEditingId(null);
               }}
               className="bg-blue-500 hover:bg-blue-600 text-white transition-colors duration-300 rounded-full px-6 py-2 flex items-center"
             >
